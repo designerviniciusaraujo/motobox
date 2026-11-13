@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10251d">
+<title>BOXMOTO — Mercado Delivery</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{--ink:#10251d;--green:#173d2c;--lime:#c8f169;--muted:#718078}
+  *{box-sizing:border-box} body{margin:0;background:#f3f6f1;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  button,input,select,textarea{font:inherit} .app{max-width:480px;min-height:100dvh;margin:auto;background:#f8faf7;position:relative;padding-bottom:96px;box-shadow:0 0 50px #10251d12}
+  .hide-scroll::-webkit-scrollbar{display:none}.hide-scroll{scrollbar-width:none}
+  .product{background:white;border:1px solid #e7ede7;border-radius:20px;padding:12px;display:flex;flex-direction:column;min-width:0}
+  .product-art{height:104px;border-radius:14px;background:#f1f5ef;display:grid;place-items:center;font-size:48px}
+  .pill{border:1px solid #e2e9e1;background:white;border-radius:999px;padding:9px 14px;white-space:nowrap;font-size:12px;font-weight:700;color:#526258}
+  .pill.active{background:var(--green);border-color:var(--green);color:white}
+  .primary{background:var(--lime);color:#13251a;border-radius:16px;font-weight:900;padding:16px 18px;width:100%;box-shadow:0 5px 0 #a9d44e}
+  .darkbtn{background:var(--green);color:white;border-radius:14px;padding:13px 16px;font-weight:800}
+  .step{display:flex;gap:12px;align-items:flex-start}.stepnum{height:28px;width:28px;flex:none;border-radius:50%;display:grid;place-items:center;background:#eaf3df;color:#315a2d;font-weight:900;font-size:12px}
+  .field{width:100%;border:1px solid #dfe7df;border-radius:13px;background:white;padding:13px 14px;outline:none;color:#14251c}
+  .field:focus{border-color:#6c9c48;box-shadow:0 0 0 3px #c8f16955}
+  .screen{display:none}.screen.active{display:block}
+  .toast{position:fixed;bottom:105px;left:50%;transform:translateX(-50%);background:#10251d;color:white;padding:12px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:50;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap}.toast.show{opacity:1}
+  .bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);background:#ffffffed;backdrop-filter:blur(14px);border-top:1px solid #e6ece5;padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;z-index:20}
+  .navitem{display:flex;flex-direction:column;align-items:center;gap:4px;color:#839087;font-size:10px;font-weight:800}.navitem.active{color:#214b32}
+  .overlay{position:fixed;inset:0;background:#0b1a13a8;z-index:40;display:none;align-items:flex-end;justify-content:center}.overlay.open{display:flex}
+  .sheet{width:min(480px,100%);background:#f8faf7;border-radius:26px 26px 0 0;padding:22px 20px 28px;max-height:92dvh;overflow:auto}
+  .tag{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#648052}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bg-[#10251d] text-white px-5 pt-5 pb-6 rounded-b-[28px]">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 rounded-2xl bg-[#c8f169] text-[#10251d] grid place-items-center"><i data-lucide="shopping-basket"></i></div>
+        <div><div class="font-black tracking-tight text-xl leading-none">BOX<span class="text-[#c8f169]">MOTO</span></div><div class="text-[9px] tracking-[.2em] text-white/55 font-bold mt-1">MERCADO DELIVERY</div></div>
+      </div>
+      <button onclick="showCart()" class="relative w-11 h-11 rounded-full bg-white/10 grid place-items-center"><i data-lucide="shopping-cart"></i><span id="cartBadge" class="absolute -top-1 -right-1 bg-[#c8f169] text-[#10251d] text-[10px] font-black rounded-full min-w-5 h-5 grid place-items-center">0</span></button>
+    </div>
+    <div class="mt-7">
+      <div class="text-[#c8f169] text-xs font-black tracking-widest uppercase">Sua compra, sem perder tempo</div>
+      <h1 class="text-[31px] font-black leading-[1.05] mt-2 tracking-tight">O trânsito parou.<br>Sua compra não.</h1>
+      <p class="text-white/65 text-sm mt-3 max-w-[290px]">Você escolhe. A gente compra no mercado e leva até sua porta.</p>
+    </div>
+    <div class="mt-5 bg-white/10 border border-white/10 rounded-2xl p-3 flex items-center gap-3">
+      <i data-lucide="map-pin" class="text-[#c8f169]"></i>
+      <div class="flex-1 min-w-0"><div class="text-[10px] text-white/50 font-bold uppercase tracking-wider">Região de atendimento</div><select id="city" class="bg-transparent text-white font-bold text-sm w-full outline-none"><option class="text-black">Ubatuba</option><option class="text-black">Caraguatatuba</option></select></div>
+      <i data-lucide="chevron-down" class="text-white/50 w-4"></i>
+    </div>
+  </header>
+
+  <main class="px-4 pt-5">
+    <section id="catalogScreen" class="screen active">
+      <div class="flex items-center justify-between mb-3"><div><div class="tag">Mercado na palma da mão</div><h2 class="text-xl font-black mt-1">Monte seu pedido</h2></div><span class="text-[10px] font-bold text-[#6e7b71] bg-[#eaf0e8] px-3 py-2 rounded-full">PREÇOS DEMO</span></div>
+      <div class="relative mb-4"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 text-[#829087]"></i><input id="search" class="field pl-11" placeholder="Buscar arroz, leite, café..." oninput="renderProducts()"></div>
+      <div id="categories" class="flex gap-2 overflow-x-auto hide-scroll pb-3 mb-2"></div>
+      <div class="flex items-center justify-between mb-3"><h3 id="categoryTitle" class="font-black">Mais pedidos</h3><span class="text-xs text-[#829087]" id="productCount"></span></div>
+      <div id="products" class="grid grid-cols-2 gap-3"></div>
+      <div class="mt-5 rounded-2xl bg-[#edf4e8] p-4 flex gap-3"><i data-lucide="info" class="w-5 h-5 text-[#547a3b] flex-none mt-0.5"></i><p class="text-xs leading-relaxed text-[#52634f]">Os produtos e valores são demonstrativos. Antes de finalizar, confirmaremos preço, disponibilidade, substituições e taxa de entrega com você.</p></div>
+    </section>
+
+    <section id="cartScreen" class="screen">
+      <button onclick="go('catalogScreen')" class="text-sm font-bold text-[#52704f] flex items-center gap-2 mb-4"><i data-lucide="arrow-left" class="w-4"></i> Continuar comprando</button>
+      <div class="tag">Seu pedido</div><h2 class="text-2xl font-black mt-1 mb-5">Carrinho</h2>
+      <div id="cartItems" class="space-y-3"></div>
+      <div id="emptyCart" class="hidden text-center py-14"><div class="text-5xl">🛒</div><h3 class="font-black text-lg mt-3">Seu carrinho está vazio</h3><p class="text-sm text-[#829087] mt-1">Adicione produtos para continuar.</p><button class="darkbtn mt-5" onclick="go('catalogScreen')">Ver produtos</button></div>
+      <div id="cartSummary" class="mt-5 bg-white rounded-2xl border border-[#e7ede7] p-4">
+        <div class="flex justify-between text-sm"><span class="text-[#718078]">Produtos</span><b id="cartSubtotal">R$ 0,00</b></div>
+        <div class="flex justify-between text-sm mt-3"><span class="text-[#718078]">Entrega estimada</span><b id="cartDelivery">A confirmar</b></div>
+        <div class="border-t border-dashed border-[#dce5dc] my-4"></div>
+        <div class="flex justify-between items-center"><span class="font-black">Total estimado</span><strong id="cartTotal" class="text-2xl font-black">R$ 0,00</strong></div>
+        <p class="text-[11px] text-[#829087] mt-2">O total final será confirmado antes da compra no mercado.</p>
+      </div>
+      <button id="checkoutBtn" class="primary mt-4" onclick="openCheckout()">Continuar para entrega <span class="ml-2">→</span></button>
+    </section>
+
+    <section id="successScreen" class="screen">
+      <div class="text-center pt-8 pb-5">
+        <div class="w-20 h-20 rounded-full bg-[#e5f4d6] text-[#315a2d] grid place-items-center mx-auto"><i data-lucide="check" class="w-10 h-10"></i></div>
+        <div class="tag mt-6">Simulação concluída</div><h2 class="text-3xl font-black mt-2">Pedido recebido!</h2><p class="text-sm text-[#718078] mt-2 max-w-[280px] mx-auto">Essa é uma confirmação demonstrativa. Nenhuma cobrança ou compra real foi realizada.</p>
+      </div>
+      <div class="bg-white border border-[#e7ede7] rounded-2xl p-4">
+        <div class="flex justify-between items-center"><span class="text-xs text-[#718078] font-bold">NÚMERO DO PEDIDO</span><b id="orderNumber" class="font-black">#BX-0000</b></div>
+        <div class="border-t border-dashed border-[#e1e8e0] my-4"></div>
+        <div id="successDetails" class="space-y-3 text-sm"></div>
+      </div>
+      <div class="mt-4 bg-[#edf4e8] rounded-2xl p-4">
+        <h3 class="font-black text-sm mb-3">O que aconteceria agora?</h3>
+        <div class="space-y-3">
+          <div class="step"><div class="stepnum">1</div><div><b class="text-sm">Conferimos seu pedido</b><p class="text-xs text-[#718078]">Preço e estoque no mercado escolhido.</p></div></div>
+          <div class="step"><div class="stepnum">2</div><div><b class="text-sm">Você aprova o total</b><p class="text-xs text-[#718078]">Incluindo a taxa de entrega.</p></div></div>
+          <div class="step"><div class="stepnum">3</div><div><b class="text-sm">Compramos e entregamos</b><p class="text-xs text-[#718078]">Seu pedido segue para o endereço informado.</p></div></div>
+        </div>
+      </div>
+      <button class="primary mt-5" onclick="newOrder()">Fazer novo pedido</button>
+      <button class="w-full text-sm font-bold text-[#607267] py-4" onclick="go('catalogScreen')">Voltar ao início</button>
+    </section>
+  </main>
+
+  <nav class="bottomnav">
+    <button class="navitem active" id="navHome" onclick="go('catalogScreen')"><i data-lucide="store" class="w-5 h-5"></i><span>Mercado</span></button>
+    <button class="navitem" id="navCart" onclick="showCart()"><i data-lucide="shopping-bag" class="w-5 h-5"></i><span>Carrinho</span></button>
+    <button class="navitem" onclick="showHow()"><i data-lucide="clipboard-list" class="w-5 h-5"></i><span>Como funciona</span></button>
+  </nav>
+</div>
+
+<div id="checkoutOverlay" class="overlay" onclick="if(event.target===this)closeCheckout()">
+  <div class="sheet">
+    <div class="flex items-center justify-between mb-1"><div><div class="tag">Última etapa</div><h2 class="text-2xl font-black mt-1">Dados da entrega</h2></div><button onclick="closeCheckout()" class="w-9 h-9 rounded-full bg-[#eaf0e8] grid place-items-center"><i data-lucide="x"></i></button></div>
+    <p class="text-sm text-[#718078] mb-5">Preencha os dados para simular a conclusão da compra.</p>
+    <form id="checkoutForm" onsubmit="completeOrder(event)" class="space-y-3">
+      <label class="block"><span class="text-xs font-bold text-[#53645a]">Seu nome</span><input class="field mt-1" id="customerName" required placeholder="Nome e sobrenome"></label>
+      <label class="block"><span class="text-xs font-bold text-[#53645a]">WhatsApp</span><input class="field mt-1" id="customerPhone" required inputmode="tel" placeholder="(12) 99999-9999"></label>
+      <label class="block"><span class="text-xs font-bold text-[#53645a]">Endereço completo</span><input class="field mt-1" id="customerAddress" required placeholder="Rua, número e complemento"></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block"><span class="text-xs font-bold text-[#53645a]">Bairro</span><input class="field mt-1" id="customerNeighborhood" required placeholder="Seu bairro"></label>
+        <label class="block"><span class="text-xs font-bold text-[#53645a]">CEP</span><input class="field mt-1" id="customerZip" inputmode="numeric" placeholder="00000-000"></label>
+      </div>
+      <label class="block"><span class="text-xs font-bold text-[#53645a]">Forma de pagamento</span><select class="field mt-1" id="payment"><option>Pix na confirmação</option><option>Dinheiro na entrega</option><option>Cartão na entrega</option></select></label>
+      <label class="block"><span class="text-xs font-bold text-[#53645a]">Observações (opcional)</span><textarea class="field mt-1 resize-none" id="notes" rows="2" placeholder="Referência, preferência de marca..."></textarea></label>
+      <div class="bg-[#edf4e8] rounded-xl p-3 text-xs text-[#53634e] flex gap-2"><i data-lucide="shield-check" class="w-4 h-4 flex-none"></i><span>Simulação: seus dados não serão enviados nem haverá cobrança. O pedido será apenas exibido na tela.</span></div>
+      <div class="bg-white border border-[#e7ede7] rounded-xl p-3 flex justify-between items-center"><span class="text-sm font-bold">Total estimado</span><b id="checkoutTotal" class="text-xl font-black">R$ 0,00</b></div>
+      <button type="submit" class="primary">Confirmar pedido de demonstração <span class="ml-1">✓</span></button>
+    </form>
+  </div>
+</div>
+<div id="infoOverlay" class="overlay" onclick="if(event.target===this)this.classList.remove('open')">
+ <div class="sheet"><div class="flex justify-between"><h2 class="text-xl font-black">Como funciona</h2><button onclick="document.getElementById('infoOverlay').classList.remove('open')" class="w-9 h-9 rounded-full bg-[#eaf0e8] grid place-items-center"><i data-lucide="x"></i></button></div>
+ <div class="space-y-4 mt-5"><div class="step"><div class="stepnum">1</div><div><b>Escolha seus produtos</b><p class="text-xs text-[#718078]">Monte a lista pelo app.</p></div></div><div class="step"><div class="stepnum">2</div><div><b>Receba a confirmação</b><p class="text-xs text-[#718078]">Validamos estoque, preços e entrega com você.</p></div></div><div class="step"><div class="stepnum">3</div><div><b>Compra e entrega</b><p class="text-xs text-[#718078]">Após sua aprovação, fazemos a compra e enviamos até sua casa.</p></div></div></div><p class="text-[11px] text-[#829087] mt-5">Demonstração de interface — operação real, pagamento e entrega ainda não estão conectados.</p></div>
+</div>
+<div id="toast" class="toast">Adicionado ao carrinho</div>
+
+<script>
+const productsData=[
+{id:1,n:'Arroz tipo 1 5kg',b:'Pacote 5 kg',p:22.99,c:'Mercearia',e:'🍚'},
+{id:2,n:'Feijão carioca 1kg',b:'Pacote 1 kg',p:7.55,c:'Mercearia',e:'🫘'},
+{id:3,n:'Óleo de soja 900ml',b:'Garrafa 900 ml',p:6.99,c:'Mercearia',e:'🫗'},
+{id:4,n:'Açúcar refinado 1kg',b:'Pacote 1 kg',p:4.79,c:'Mercearia',e:'🍬'},
+{id:5,n:'Café tradicional 500g',b:'Pacote 500 g',p:18.90,c:'Mercearia',e:'☕'},
+{id:6,n:'Macarrão espaguete 500g',b:'Pacote 500 g',p:4.49,c:'Mercearia',e:'🍝'},
+{id:7,n:'Leite integral 1L',b:'Caixa 1 litro',p:5.29,c:'Laticínios',e:'🥛'},
+{id:8,n:'Ovos brancos 12 un.',b:'Bandeja',p:11.90,c:'Laticínios',e:'🥚'},
+{id:9,n:'Manteiga 200g',b:'Pote 200 g',p:9.49,c:'Laticínios',e:'🧈'},
+{id:10,n:'Banana nanica 1kg',b:'Aproximadamente 1 kg',p:6.99,c:'Hortifruti',e:'🍌'},
+{id:11,n:'Tomate 1kg',b:'Aproximadamente 1 kg',p:8.49,c:'Hortifruti',e:'🍅'},
+{id:12,n:'Batata 1kg',b:'Aproximadamente 1 kg',p:5.99,c:'Hortifruti',e:'🥔'},
+{id:13,n:'Água mineral 1,5L',b:'Garrafa',p:3.49,c:'Bebidas',e:'💧'},
+{id:14,n:'Refrigerante 2L',b:'Garrafa 2 litros',p:9.49,c:'Bebidas',e:'🥤'},
+{id:15,n:'Detergente 500ml',b:'Unidade',p:2.49,c:'Limpeza',e:'🧴'},
+{id:16,n:'Papel higiênico 12 un.',b:'Pacote',p:16.90,c:'Higiene',e:'🧻'}
+];
+const cats=['Todos','Mercearia','Laticínios','Hortifruti','Bebidas','Limpeza','Higiene'];
+let category='Todos',cart={},lastOrder=null;
+const money=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function renderCats(){document.getElementById('categories').innerHTML=cats.map(c=>`<button class="pill ${category===c?'active':''}" onclick="setCategory('${c}')">${c}</button>`).join('')}
+function setCategory(c){category=c;renderCats();renderProducts()}
+function renderProducts(){
+ const q=document.getElementById('search').value.toLowerCase();
+ const list=productsData.filter(p=>(category==='Todos'||p.c===category)&&(p.n.toLowerCase().includes(q)||p.c.toLowerCase().includes(q)));
+ document.getElementById('categoryTitle').textContent=category==='Todos'?'Mais pedidos':category;
+ document.getElementById('productCount').textContent=list.length+' produtos';
+ document.getElementById('products').innerHTML=list.map(p=>`<article class="product"><div class="product-art">${p.e}</div><div class="mt-3 text-[10px] font-bold text-[#829087]">${p.b}</div><h4 class="font-extrabold text-sm leading-snug mt-1 min-h-[38px]">${p.n}</h4><div class="font-black text-lg mt-2">${money(p.p)}</div><button onclick="add(${p.id})" class="mt-3 bg-[#173d2c] text-white rounded-xl py-2.5 text-xs font-black flex items-center justify-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Adicionar</button></article>`).join('')||'<div class="col-span-2 text-center text-sm text-[#829087] py-8">Nenhum produto encontrado.</div>';
+ lucide.createIcons();
+}
+function add(id){cart[id]=(cart[id]||0)+1;updateBadge();toast('Produto adicionado');}
+function changeQty(id,delta){cart[id]=(cart[id]||0)+delta;if(cart[id]<=0)delete cart[id];updateBadge();renderCart()}
+function count(){return Object.values(cart).reduce((a,b)=>a+b,0)}
+function subtotal(){return productsData.reduce((s,p)=>s+p.p*(cart[p.id]||0),0)}
+function updateBadge(){document.getElementById('cartBadge').textContent=count()}
+function renderCart(){
+ const items=productsData.filter(p=>cart[p.id]);
+ document.getElementById('cartItems').innerHTML=items.map(p=>`<div class="bg-white border border-[#e7ede7] rounded-2xl p-3 flex gap-3 items-center"><div class="w-14 h-14 bg-[#f1f5ef] rounded-xl grid place-items-center text-3xl">${p.e}</div><div class="flex-1 min-w-0"><div class="font-extrabold text-sm">${p.n}</div><div class="text-xs text-[#829087] mt-1">${money(p.p)} / un.</div></div><div class="flex items-center gap-2"><button class="w-7 h-7 rounded-full bg-[#edf3e9] font-black" onclick="changeQty(${p.id},-1)">−</button><b class="text-sm w-3 text-center">${cart[p.id]}</b><button class="w-7 h-7 rounded-full bg-[#edf3e9] font-black" onclick="changeQty(${p.id},1)">+</button></div></div>`).join('');
+ const empty=!items.length;document.getElementById('emptyCart').classList.toggle('hidden',!empty);document.getElementById('cartSummary').classList.toggle('hidden',empty);document.getElementById('checkoutBtn').classList.toggle('hidden',empty);
+ document.getElementById('cartSubtotal').textContent=money(subtotal());document.getElementById('cartTotal').textContent=money(subtotal());document.getElementById('cartDelivery').textContent='A confirmar';document.getElementById('checkoutTotal').textContent=money(subtotal());
+}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.getElementById('navHome').classList.toggle('active',id==='catalogScreen');document.getElementById('navCart').classList.toggle('active',id==='cartScreen');if(id==='cartScreen')renderCart();window.scrollTo({top:0,behavior:'smooth'})}
+function showCart(){go('cartScreen')}
+function openCheckout(){if(!count())return;renderCart();document.getElementById('checkoutOverlay').classList.add('open')}
+function closeCheckout(){document.getElementById('checkoutOverlay').classList.remove('open')}
+function completeOrder(e){
+ e.preventDefault();if(!count())return;
+ const name=document.getElementById('customerName').value.trim();
+ lastOrder={name,phone:document.getElementById('customerPhone').value,address:document.getElementById('customerAddress').value,neighborhood:document.getElementById('customerNeighborhood').value,zip:document.getElementById('customerZip').value,city:document.getElementById('city').value,payment:document.getElementById('payment').value,notes:document.getElementById('notes').value,items:productsData.filter(p=>cart[p.id]).map(p=>({...p,qty:cart[p.id]})),total:subtotal()};
+ const num='BX-'+String(Math.floor(1000+Math.random()*9000));document.getElementById('orderNumber').textContent='#'+num;
+ document.getElementById('successDetails').innerHTML=`<div class="flex justify-between gap-3"><span class="text-[#829087]">Cliente</span><b class="text-right">${escapeHtml(name)}</b></div><div class="flex justify-between gap-3"><span class="text-[#829087]">Entrega</span><b class="text-right">${escapeHtml(lastOrder.city)} · ${escapeHtml(lastOrder.neighborhood)}</b></div><div class="flex justify-between gap-3"><span class="text-[#829087]">Endereço</span><b class="text-right max-w-[190px]">${escapeHtml(lastOrder.address)}</b></div><div class="flex justify-between gap-3"><span class="text-[#829087]">Pagamento</span><b class="text-right">${escapeHtml(lastOrder.payment)}</b></div><div class="border-t border-dashed border-[#e1e8e0] pt-3"><div class="font-black mb-2">Itens do pedido</div>${lastOrder.items.map(i=>`<div class="flex justify-between text-xs py-1"><span>${i.qty}× ${escapeHtml(i.n)}</span><b>${money(i.p*i.qty)}</b></div>`).join('')}</div><div class="border-t border-dashed border-[#e1e8e0] pt-3 flex justify-between"><b>Total estimado</b><strong class="text-lg">${money(lastOrder.total)}</strong></div>`;
+ closeCheckout();go('successScreen');lucide.createIcons();
+}
+function newOrder(){cart={};lastOrder=null;updateBadge();document.getElementById('checkoutForm').reset();go('catalogScreen')}
+function showHow(){document.getElementById('infoOverlay').classList.add('open')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove('show'),1600)}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+renderCats();renderProducts();updateBadge();lucide.createIcons();
+</script>
+</body>
+</html>
